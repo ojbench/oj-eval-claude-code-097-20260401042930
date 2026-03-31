@@ -1,8 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <sstream>
-#include <string>
-#include <algorithm>
+#include <queue>
 
 using namespace std;
 
@@ -18,27 +16,31 @@ TreeNode* buildTree(const vector<int>& arr) {
     if (arr.empty() || arr[0] == -1) return nullptr;
 
     TreeNode* root = new TreeNode(arr[0]);
-    vector<TreeNode*> queue;
-    queue.push_back(root);
+    queue<TreeNode*> q;
+    q.push(root);
 
-    int i = 1;
-    while (i < arr.size()) {
-        TreeNode* curr = queue.front();
-        queue.erase(queue.begin());
+    size_t i = 1;
+    while (!q.empty() && i < arr.size()) {
+        TreeNode* curr = q.front();
+        q.pop();
 
         // Left child
-        if (i < arr.size() && arr[i] != -1) {
-            curr->left = new TreeNode(arr[i]);
-            queue.push_back(curr->left);
+        if (i < arr.size()) {
+            if (arr[i] != -1) {
+                curr->left = new TreeNode(arr[i]);
+                q.push(curr->left);
+            }
+            i++;
         }
-        i++;
 
         // Right child
-        if (i < arr.size() && arr[i] != -1) {
-            curr->right = new TreeNode(arr[i]);
-            queue.push_back(curr->right);
+        if (i < arr.size()) {
+            if (arr[i] != -1) {
+                curr->right = new TreeNode(arr[i]);
+                q.push(curr->right);
+            }
+            i++;
         }
-        i++;
     }
 
     return root;
@@ -72,44 +74,6 @@ int kthLargest(TreeNode* root, int k) {
     return result;
 }
 
-// Parse input array like "root = [12, 5, 18, 2, 9, 15, 20], cnt = 4"
-void parseInput(string& line, vector<int>& arr, int& cnt) {
-    // Find the array part
-    size_t start = line.find('[');
-    size_t end = line.find(']');
-
-    if (start != string::npos && end != string::npos) {
-        string arrayStr = line.substr(start + 1, end - start - 1);
-        stringstream ss(arrayStr);
-        string token;
-
-        while (getline(ss, token, ',')) {
-            // Trim spaces
-            token.erase(0, token.find_first_not_of(" \t\n\r"));
-            token.erase(token.find_last_not_of(" \t\n\r") + 1);
-
-            if (!token.empty() && token != "null") {
-                arr.push_back(stoi(token));
-            } else {
-                arr.push_back(-1);
-            }
-        }
-    }
-
-    // Find cnt value
-    size_t cntPos = line.find("cnt");
-    if (cntPos != string::npos) {
-        size_t equalPos = line.find('=', cntPos);
-        if (equalPos != string::npos) {
-            string cntStr = line.substr(equalPos + 1);
-            // Remove any trailing characters
-            cntStr.erase(0, cntStr.find_first_not_of(" \t\n\r"));
-            cntStr.erase(cntStr.find_last_not_of(" \t\n\r") + 1);
-            cnt = stoi(cntStr);
-        }
-    }
-}
-
 void deleteTree(TreeNode* root) {
     if (root == nullptr) return;
     deleteTree(root->left);
@@ -118,13 +82,16 @@ void deleteTree(TreeNode* root) {
 }
 
 int main() {
-    string line;
-    getline(cin, line);
+    int n;
+    cin >> n;  // number of elements in the array
 
-    vector<int> arr;
-    int cnt = 0;
+    vector<int> arr(n);
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
 
-    parseInput(line, arr, cnt);
+    int cnt;
+    cin >> cnt;
 
     TreeNode* root = buildTree(arr);
     int answer = kthLargest(root, cnt);

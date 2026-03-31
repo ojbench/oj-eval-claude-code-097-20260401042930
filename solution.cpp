@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <sstream>
+#include <string>
 
 using namespace std;
 
@@ -53,17 +55,14 @@ int count_nodes = 0;
 void reverseInorder(TreeNode* node, int k) {
     if (node == nullptr || count_nodes >= k) return;
 
-    // Visit right subtree first (larger values)
     reverseInorder(node->right, k);
 
-    // Visit current node
     count_nodes++;
     if (count_nodes == k) {
         result = node->val;
         return;
     }
 
-    // Visit left subtree (smaller values)
     reverseInorder(node->left, k);
 }
 
@@ -82,16 +81,44 @@ void deleteTree(TreeNode* root) {
 }
 
 int main() {
-    int n;
-    cin >> n;  // number of elements in the array
+    string line;
+    getline(cin, line);
 
-    vector<int> arr(n);
-    for (int i = 0; i < n; i++) {
-        cin >> arr[i];
+    vector<int> arr;
+    int cnt = 0;
+
+    // Parse: root = [12, 5, 18, 2, 9, 15, 20], cnt = 4
+    size_t arrayStart = line.find('[');
+    size_t arrayEnd = line.find(']');
+
+    if (arrayStart != string::npos && arrayEnd != string::npos) {
+        string arrayStr = line.substr(arrayStart + 1, arrayEnd - arrayStart - 1);
+        stringstream ss(arrayStr);
+        string token;
+
+        while (getline(ss, token, ',')) {
+            token.erase(0, token.find_first_not_of(" \t\n\r"));
+            token.erase(token.find_last_not_of(" \t\n\r") + 1);
+
+            if (!token.empty() && token != "null") {
+                arr.push_back(stoi(token));
+            } else {
+                arr.push_back(-1);
+            }
+        }
     }
 
-    int cnt;
-    cin >> cnt;
+    // Find cnt value
+    size_t cntPos = line.find("cnt");
+    if (cntPos != string::npos) {
+        size_t equalPos = line.find('=', cntPos);
+        if (equalPos != string::npos) {
+            string cntStr = line.substr(equalPos + 1);
+            cntStr.erase(0, cntStr.find_first_not_of(" \t\n\r"));
+            cntStr.erase(cntStr.find_last_not_of(" \t\n\r") + 1);
+            cnt = stoi(cntStr);
+        }
+    }
 
     TreeNode* root = buildTree(arr);
     int answer = kthLargest(root, cnt);

@@ -3,7 +3,7 @@
 #include <queue>
 #include <sstream>
 #include <string>
-#include <cctype>
+#include <fstream>
 
 using namespace std;
 
@@ -26,7 +26,6 @@ TreeNode* buildTree(const vector<int>& arr) {
         TreeNode* curr = q.front();
         q.pop();
 
-        // Left child
         if (i < arr.size()) {
             if (arr[i] != -1) {
                 curr->left = new TreeNode(arr[i]);
@@ -35,7 +34,6 @@ TreeNode* buildTree(const vector<int>& arr) {
             i++;
         }
 
-        // Right child
         if (i < arr.size()) {
             if (arr[i] != -1) {
                 curr->right = new TreeNode(arr[i]);
@@ -79,85 +77,48 @@ void deleteTree(TreeNode* root) {
     delete root;
 }
 
-vector<int> parseArray(const string& line) {
-    vector<int> arr;
-    string cleaned = line;
-
-    // Remove "root = " if present
-    size_t rootPos = cleaned.find("root");
-    if (rootPos != string::npos) {
-        size_t equalPos = cleaned.find('=', rootPos);
-        if (equalPos != string::npos) {
-            cleaned = cleaned.substr(equalPos + 1);
-        }
-    }
-
-    // Remove brackets if present
-    size_t start = cleaned.find('[');
-    size_t end = cleaned.find(']');
-    if (start != string::npos && end != string::npos) {
-        cleaned = cleaned.substr(start + 1, end - start - 1);
-    }
-
-    // Parse comma-separated values
-    stringstream ss(cleaned);
-    string token;
-
-    while (getline(ss, token, ',')) {
-        token.erase(0, token.find_first_not_of(" \t\n\r"));
-        token.erase(token.find_last_not_of(" \t\n\r") + 1);
-
-        if (token.empty() || token == "null") {
-            arr.push_back(-1);
-        } else {
-            try {
-                arr.push_back(stoi(token));
-            } catch (...) {
-                // Skip invalid tokens
-            }
-        }
-    }
-
-    return arr;
-}
-
-int parseCnt(const string& line) {
-    string cleaned = line;
-
-    // Check if line contains "cnt ="
-    size_t cntPos = cleaned.find("cnt");
-    if (cntPos != string::npos) {
-        size_t equalPos = cleaned.find('=', cntPos);
-        if (equalPos != string::npos) {
-            cleaned = cleaned.substr(equalPos + 1);
-        }
-    }
-
-    cleaned.erase(0, cleaned.find_first_not_of(" \t\n\r"));
-    cleaned.erase(cleaned.find_last_not_of(" \t\n\r,") + 1);
-
-    return stoi(cleaned);
-}
-
 int main() {
+    // Read all input
+    string input;
     string line;
-    getline(cin, line);
+    while (getline(cin, line)) {
+        if (!input.empty()) input += "\n";
+        input += line;
+    }
 
     vector<int> arr;
     int cnt = 0;
 
-    // Check if input is on one line or two
-    if (line.find("cnt") != string::npos) {
-        // Single line format: root = [12, 5, 18, 2, 9, 15, 20], cnt = 4
-        arr = parseArray(line);
-        cnt = parseCnt(line);
-    } else {
-        // Two line format
-        arr = parseArray(line);
+    // Try to find array and cnt
+    size_t arrayStart = input.find('[');
+    size_t arrayEnd = input.find(']');
 
-        string line2;
-        if (getline(cin, line2)) {
-            cnt = parseCnt(line2);
+    if (arrayStart != string::npos && arrayEnd != string::npos) {
+        // Parse array
+        string arrayStr = input.substr(arrayStart + 1, arrayEnd - arrayStart - 1);
+        stringstream ss(arrayStr);
+        string token;
+
+        while (getline(ss, token, ',')) {
+            token.erase(0, token.find_first_not_of(" \t\n\r"));
+            token.erase(token.find_last_not_of(" \t\n\r") + 1);
+
+            if (!token.empty() && token != "null") {
+                arr.push_back(stoi(token));
+            } else {
+                arr.push_back(-1);
+            }
+        }
+    }
+
+    // Find cnt
+    size_t cntPos = input.find("cnt");
+    if (cntPos != string::npos) {
+        size_t equalPos = input.find('=', cntPos);
+        if (equalPos != string::npos) {
+            string remaining = input.substr(equalPos + 1);
+            stringstream ss(remaining);
+            ss >> cnt;
         }
     }
 
